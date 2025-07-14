@@ -124,7 +124,12 @@
       <span>Stock Out</span>
     </button>
   </div>
-
+  <script>
+  function logout() {
+    localStorage.removeItem('isAuthenticated');
+    window.location.href = 'index.html';
+  }
+</script>
   <script src="theme.js"></script>
   <script src="dashboard.js"></script>
 </body>
