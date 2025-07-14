@@ -180,3 +180,9 @@ function exportToExcel() {
 }
 
 document.addEventListener('DOMContentLoaded', loadDashboard);
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('isAuthenticated') !== 'true') {
+    window.location.href = 'index.html'; // or 'login.html'
+  }
+});
