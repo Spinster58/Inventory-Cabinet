@@ -84,7 +84,12 @@
       <p id="error" class="error-message"></p>
     </form>
   </div>
-
+  <script>
+  // Clear authentication when loading login page
+    document.addEventListener('DOMContentLoaded', () => {
+     localStorage.removeItem('isAuthenticated');
+       });
+  </script>
   <script src="auth.js"></script>
 </body>
 </html>
