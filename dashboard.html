@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Inventory App</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script>
+    // Authentication check
+    document.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('isAuthenticated') !== 'true') {
+        window.location.href = 'login.html';
+      }
+    });
+
+    function logout() {
+      localStorage.removeItem('isAuthenticated');
+      window.location.href = 'login.html';
+    }
+  </script>
+</head>
+<body>
+  <div class="header">
+    <h2>Dashboard</h2>
+    <div class="header-controls">
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+      <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-chart-pie"></i> Inventory Summary
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Total Stock In:</span>
+      <span class="stat-value" id="total-in">0</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Total Stock Out:</span>
+      <span class="stat-value" id="total-out">0</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Most Frequent Item:</span>
+      <span class="stat-value" id="most-item">-</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-boxes"></i> Current Stock Levels
+    </div>
+    <div class="chart-container">
+      <canvas id="stockChart"></canvas>
+    </div>
+    <table id="stock-level-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Quantity</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button class="export-btn" onclick="exportToExcel()">
+      <i class="fas fa-file-export"></i> Export to Excel
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-arrow-down"></i> Recent Stock In (Last 5)
+    </div>
+    <table id="recent-in-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Unit Price</th>
+          <th>Total</th>
+          <th class="date-column">Date</th>
+          <th class="time-column">Time</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-arrow-up"></i> Recent Stock Out (Last 5)
+    </div>
+    <table id="recent-out-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Person</th>
+          <th>Reason</th>
+          <th class="date-column">Date</th>
+          <th class="time-column">Time</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="tab-bar">
+    <button onclick="location.href='dashboard.html'" class="tab-item active">
+      <i class="fas fa-home"></i>
+      <span>Dashboard</span>
+    </button>
+    <button onclick="location.href='stock_in.html'" class="tab-item">
+      <i class="fas fa-arrow-down"></i>
+      <span>Stock In</span>
+    </button>
+    <button onclick="location.href='stock_out.html'" class="tab-item">
+      <i class="fas fa-arrow-up"></i>
+      <span>Stock Out</span>
+    </button>
+  </div>
+
+  <script src="theme.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
