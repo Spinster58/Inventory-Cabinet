@@ -7,26 +7,16 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-  <script>
-    // Authentication check
-    document.addEventListener('DOMContentLoaded', () => {
-      if (localStorage.getItem('isAuthenticated') !== 'true') {
-        window.location.href = 'login.html';
-      }
-    });
-
-    function logout() {
-      localStorage.removeItem('isAuthenticated');
-      window.location.href = 'login.html';
-    }
-  </script>
 </head>
 <body>
   <div class="header">
     <h2>Dashboard</h2>
     <div class="header-controls">
+      <span id="userInfo" class="user-info"></span>
       <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+      <button id="adminBtn" class="admin-btn" onclick="location.href='admin.html'" style="display: none;">
+        <i class="fas fa-user-cog"></i> Admin
+      </button>
       <button class="logout-btn" onclick="logout()">
         <i class="fas fa-sign-out-alt"></i> Logout
       </button>
@@ -124,14 +114,47 @@
       <span>Stock Out</span>
     </button>
   </div>
-  <script>
-    function logout() {
-      localStorage.removeItem('isAuthenticated');
-      window.location.href = 'index.html';
-  }
-  </script>
+
+  <!-- Notification Bell -->
+  <div class="notification-bell">
+    <i class="fas fa-bell"></i>
+    <div class="badge"></div>
+  </div>
+
+  <!-- Notification Center -->
+  <div class="notification-center">
+    <div class="notification-header">
+      <h3>Notifications</h3>
+      <button class="clear-all-btn" onclick="clearAllNotifications()">Clear All</button>
+    </div>
+    <div class="notification-content"></div>
+  </div>
 
   <script src="theme.js"></script>
+  <script src="notifications.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="dashboard.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!localStorage.getItem('currentUser')) {
+        window.location.href = 'login.html';
+        } else {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        document.getElementById('userInfo').textContent = 
+          `${user.username} (${user.role})`;
+      
+        // Show admin button if user is admin
+      if (user.role === 'admin') {
+        document.getElementById('adminBtn').style.display = 'block';
+        }
+      }
+    });
+
+  function logout() {
+    localStorage.removeItem('currentUser');
+    window.location.href = 'login.html';
+  }
+</script>
 </body>
 </html>

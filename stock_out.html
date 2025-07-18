@@ -16,12 +16,27 @@
       <h2>Stock Out</h2>
     </div>
     <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
   </div>
 
   <div class="form-container">
     <div class="input-group">
       <label for="item">Item Name</label>
-      <input id="item" placeholder="Enter item name" required>
+      <div class="dropdown-container">
+        <div class="dropdown-header" id="itemDropdownHeader" onclick="toggleDropdown()">
+          <span id="selectedItem">Select item</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <input type="hidden" id="item">  
+        <div class="dropdown-list" id="itemDropdown">
+          <div class="dropdown-search">
+            <input type="text" placeholder="Search items..." id="itemSearch" oninput="filterItems()">
+          </div>
+          <div id="dropdownItems"></div>
+        </div>
+      </div>
     </div>
     <div class="input-group">
       <label for="qty">Quantity</label>
@@ -38,7 +53,7 @@
   </div>
 
   <div class="search-container">
-    <input id="search" placeholder="Search records..." oninput="loadData()">
+    <input id="search" placeholder="Search records...Eg:Item" oninput="loadData()">
   </div>
 
   <div class="section-title">Stock Out Records</div>
@@ -80,7 +95,35 @@
     </button>
   </div>
 
+  <!-- Notification Bell -->
+  <div class="notification-bell">
+    <i class="fas fa-bell"></i>
+    <div class="badge"></div>
+  </div>
+
+  <!-- Notification Center -->
+  <div class="notification-center">
+    <div class="notification-header">
+      <h3>Notifications</h3>
+      <button class="clear-all-btn" onclick="clearAllNotifications()">Clear All</button>
+    </div>
+    <div class="notification-content"></div>
+  </div>
+
   <script src="theme.js"></script>
+  <script src="notifications.js"></script>
   <script src="stock_out.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!localStorage.getItem('currentUser')) {
+        window.location.href = 'login.html';
+      }
+    });
+    function logout() {
+      localStorage.removeItem('currentUser');
+      window.location.href = 'login.html';
+    }
+  </script>
 </body>
 </html>

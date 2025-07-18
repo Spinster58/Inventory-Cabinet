@@ -16,6 +16,9 @@
       <h2>Stock In</h2>
     </div>
     <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
   </div>
 
   <div class="form-container">
@@ -40,13 +43,17 @@
       <input id="supplier" placeholder="Enter supplier name" required>
     </div>
     <div class="input-group">
+      <label for="receiver">Received By</label>
+      <input id="receiver" placeholder="Enter receiver name" required>
+    </div>
+    <div class="input-group">
       <label for="note">Note (Optional)</label>
       <input id="note" placeholder="Enter note">
     </div>
   </div>
 
   <div class="search-container">
-    <input id="search" placeholder="Search records...Eg:Item, Qty, etc..." oninput="loadData()">
+    <input id="search" placeholder="Search records...Eg:Item" oninput="loadData()">
   </div>
 
   <div class="section-title">Stock In Records</div>
@@ -58,6 +65,7 @@
         <th>Unit Price</th>
         <th>Total Price</th>
         <th>Supplier</th>
+        <th>Received By</th>
         <th>Note</th>
         <th class="date-column">Date</th>
         <th class="time-column">Time</th>
@@ -66,7 +74,7 @@
     </thead>
     <tbody>
       <tr>
-        <td colspan="9" class="empty-state">No stock in records found</td>
+        <td colspan="10" class="empty-state">No stock in records found</td>
       </tr>
     </tbody>
   </table>
@@ -90,7 +98,43 @@
     </button>
   </div>
 
+  <!-- Notification Bell -->
+  <div class="notification-bell">
+    <i class="fas fa-bell"></i>
+    <div class="badge"></div>
+  </div>
+
+  <!-- Notification Center -->
+  <div class="notification-center">
+    <div class="notification-header">
+      <h3>Notifications</h3>
+      <button class="clear-all-btn" onclick="clearAllNotifications()">Clear All</button>
+    </div>
+    <div class="notification-content"></div>
+  </div>
+
   <script src="theme.js"></script>
+  <script src="notifications.js"></script>
   <script src="stock_in.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentUser = localStorage.getItem('currentUser');
+      if (!currentUser) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const user = JSON.parse(currentUser);
+      if (user.role !== 'admin') {
+        document.querySelector('.fab').style.display = 'none';
+        // Removed the showNotification line
+      }
+    });
+    function logout() {
+      localStorage.removeItem('currentUser');
+      window.location.href = 'login.html';
+    }
+</script>
 </body>
 </html>

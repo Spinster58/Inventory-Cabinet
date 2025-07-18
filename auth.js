@@ -1,48 +1,148 @@
-// auth.js
-const users = [
-  {
-    username: "admin",
-    password: "1234" // Note: In production, never store plain text passwords
+// auth.js - Authentication System
+
+// Initialize auth object directly on window
+window.auth = {
+  /**
+   * Initializes default users if none exist
+   */
+  initUsers: function() {
+    try {
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      
+      // Add admin user if not exists
+      if (!users.some(u => u.username === 'admin')) {
+        users.push({
+          username: 'admin',
+          password: 'admin123',
+          role: 'admin',
+          createdAt: new Date().toISOString()
+        });
+        localStorage.setItem('users', JSON.stringify(users));
+      }
+    } catch (error) {
+      console.error('Failed to initialize users:', error);
+    }
   },
-  {
-    username: "user",
-    password: "abcd"
+
+  /**
+   * Authenticates a user
+   */
+  login: function(username, password) {
+    try {
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+      
+      if (!user) return false;
+      
+      if (user.password === password) {
+        const { password: _, ...userWithoutPassword } = user;
+        localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Login failed:', error);
+      return false;
+    }
+  },
+
+  /**
+   * Registers a new user
+   */
+  register: function(username, password, role = 'user') {
+    try {
+      if (!username || !password) return false;
+      if (password.length < 8) return false;
+      
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      
+      if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+        return false;
+      }
+      
+      const newUser = {
+        username,
+        password,
+        role,
+        createdAt: new Date().toISOString()
+      };
+      
+      users.push(newUser);
+      localStorage.setItem('users', JSON.stringify(users));
+      return true;
+    } catch (error) {
+      console.error('Registration failed:', error);
+      return false;
+    }
+  },
+
+  /**
+   * Get current logged in user
+   */
+  getCurrentUser: function() {
+    try {
+      const user = localStorage.getItem('currentUser');
+      return user ? JSON.parse(user) : null;
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Check if current user is admin
+   */
+  isAdmin: function() {
+    const user = this.getCurrentUser();
+    return user && user.role === 'admin';
+  },
+
+  /**
+   * Get all users (admin only)
+   */
+  getAllUsers: function() {
+    if (!this.isAdmin()) return [];
+    try {
+      return JSON.parse(localStorage.getItem('users')) || [];
+    } catch (error) {
+      console.error('Error getting users:', error);
+      return [];
+    }
+  },
+
+  /**
+   * ADMIN-ONLY: Reset a user's password
+   */
+  adminResetPassword: function(username, newPassword) {
+    if (!this.isAdmin()) return false;
+    
+    const users = this.getAllUsers();
+    const userIndex = users.findIndex(u => u.username === username);
+    
+    if (userIndex === -1) return false;
+    
+    users[userIndex].password = newPassword;
+    localStorage.setItem('users', JSON.stringify(users));
+    return true;
+  },
+
+  /**
+   * Remove a user (admin only)
+   */
+  removeUser: function(username) {
+    if (!this.isAdmin()) return false;
+    
+    const users = this.getAllUsers();
+    const updatedUsers = users.filter(u => u.username !== username);
+    localStorage.setItem('users', JSON.stringify(updatedUsers));
+    return true;
+  },
+
+  /**
+   * Logout current user
+   */
+  logout: function() {
+    localStorage.removeItem('currentUser');
   }
-];
-
-function handleLogin() {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value;
-  const errorElement = document.getElementById("error");
-
-  // Clear previous errors
-  errorElement.textContent = "";
-
-  // Basic validation
-  if (!username || !password) {
-    errorElement.textContent = "Please enter both username and password.";
-    return;
-  }
-
-  // Find user
-  const user = users.find(u => u.username === username && u.password === password);
-  console.log("User found:", user); // Debugging log
-  console.log("localStorage before:", localStorage.getItem('isAuthenticated')); // Debugging log
-
-  if (user) {
-    // Set authentication flag
-    localStorage.setItem('isAuthenticated', 'true');
-    console.log("localStorage after:", localStorage.getItem('isAuthenticated')); // Debugging log
-    // Redirect to dashboard
-    window.location.href = "dashboard.html";
-  } else {
-    errorElement.textContent = "Invalid username or password.";
-  }
-}
-
-// Add event listeners for Enter key
-document.getElementById('password').addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') {
-    handleLogin();
-  }
-});
+};

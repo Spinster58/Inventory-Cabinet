@@ -1,34 +1,53 @@
+// dashboard.js
+let chart;
+
 function loadDashboard() {
   const data = JSON.parse(localStorage.getItem('stockData')) || [];
   let totalIn = 0, totalOut = 0;
-  const itemCounts = {};
   const stockLevels = {};
   const recentIn = [];
   const recentOut = [];
 
+  // Calculate totals and stock levels
   data.forEach(entry => {
-    const item = entry.item.toLowerCase();
-    itemCounts[item] = (itemCounts[item] || 0) + 1;
+    const qty = parseFloat(entry.qty) || 0;
+    const item = entry.item;
 
     if (entry.type === "in") {
-      totalIn += parseFloat(entry.qty);
-      stockLevels[item] = (stockLevels[item] || 0) + parseFloat(entry.qty);
+      totalIn += qty;
       recentIn.push(entry);
-    } else if (entry.type === "out") {
-      totalOut += parseFloat(entry.qty);
-      stockLevels[item] = (stockLevels[item] || 0) - parseFloat(entry.qty);
+      stockLevels[item] = (stockLevels[item] || 0) + qty;
+    } 
+    else if (entry.type === "out") {
+      totalOut += qty;
       recentOut.push(entry);
+      stockLevels[item] = (stockLevels[item] || 0) - qty;
     }
   });
 
-  // Update summary
-  document.getElementById("total-in").textContent = totalIn;
-  document.getElementById("total-out").textContent = totalOut;
+  // Update summary cards
+  document.getElementById("total-in").textContent = totalIn.toFixed(2);
+  document.getElementById("total-out").textContent = totalOut.toFixed(2);
 
+  // Find most frequent item
+  const itemCounts = {};
+  data.forEach(entry => {
+    itemCounts[entry.item] = (itemCounts[entry.item] || 0) + 1;
+  });
   const mostFrequent = Object.entries(itemCounts).sort((a, b) => b[1] - a[1])[0];
   document.getElementById("most-item").textContent = mostFrequent ? mostFrequent[0] : "-";
 
   // Update stock levels table
+  updateStockTable(stockLevels);
+
+  // Update recent transactions
+  updateRecentTransactions(recentIn, recentOut);
+
+  // Draw chart
+  drawChart(stockLevels);
+}
+
+function updateStockTable(stockLevels) {
   const tbody = document.querySelector("#stock-level-table tbody");
   tbody.innerHTML = "";
   
@@ -45,15 +64,16 @@ function loadDashboard() {
       tbody.appendChild(row);
     });
   }
+}
 
-  // Sort and show recent transactions
+function updateRecentTransactions(recentIn, recentOut) {
+  // Sort by date/time
   recentIn.sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
   recentOut.sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
 
+  // Update tables
   updateRecentTable('recent-in-table', recentIn.slice(0, 5));
   updateRecentTable('recent-out-table', recentOut.slice(0, 5));
-
-  drawChart(stockLevels);
 }
 
 function updateRecentTable(tableId, entries) {
@@ -90,14 +110,15 @@ function updateRecentTable(tableId, entries) {
   });
 }
 
-let chart;
-
 function drawChart(stockLevels) {
   const ctx = document.getElementById('stockChart').getContext('2d');
+  
+  if (chart) {
+    chart.destroy();
+  }
+
   const labels = Object.keys(stockLevels);
   const values = Object.values(stockLevels);
-
-  if (chart) chart.destroy();
 
   if (labels.length === 0) {
     document.getElementById('stockChart').style.display = 'none';
@@ -134,55 +155,48 @@ function drawChart(stockLevels) {
 
 function exportToExcel() {
   const data = JSON.parse(localStorage.getItem('stockData')) || [];
-  
-  // Prepare stock in data
-  const stockInData = data.filter(entry => entry.type === "in").map(entry => ({
-    'Type': 'Stock In',
-    'Item': entry.item,
-    'Quantity': entry.qty,
-    'Unit Price': entry.price,
-    'Total Price': entry.totalPrice,
-    'Supplier': entry.supplier,
-    'Note': entry.note || '',
-    'Date': entry.date,
-    'Time': entry.time
-  }));
-
-  // Prepare stock out data
-  const stockOutData = data.filter(entry => entry.type === "out").map(entry => ({
-    'Type': 'Stock Out',
-    'Item': entry.item,
-    'Quantity': entry.qty,
-    'Taken By': entry.person,
-    'Reason': entry.reason || '',
-    'Date': entry.date,
-    'Time': entry.time
-  }));
-
-  if (stockInData.length === 0 && stockOutData.length === 0) {
-    alert("No data to export");
+  if (data.length === 0) {
+    showNotification('No data to export', true);
     return;
   }
 
+  // Create workbook
   const wb = XLSX.utils.book_new();
   
-  if (stockInData.length > 0) {
-    const wsIn = XLSX.utils.json_to_sheet(stockInData);
-    XLSX.utils.book_append_sheet(wb, wsIn, 'Stock In');
-  }
-  
-  if (stockOutData.length > 0) {
-    const wsOut = XLSX.utils.json_to_sheet(stockOutData);
-    XLSX.utils.book_append_sheet(wb, wsOut, 'Stock Out');
-  }
+  // Prepare stock data
+  const stockData = data.map(entry => ({
+    Type: entry.type === 'in' ? 'Stock In' : 'Stock Out',
+    Item: entry.item,
+    Quantity: entry.qty,
+    'Unit Price': entry.price || '',
+    'Total Price': entry.totalPrice || '',
+    Supplier: entry.supplier || '',
+    'Received By': entry.receiver || '',
+    'Taken By': entry.person || '',
+    Reason: entry.reason || '',
+    Note: entry.note || '',
+    Date: entry.date,
+    Time: entry.time
+  }));
 
-  XLSX.writeFile(wb, 'inventory_report.xlsx');
+  const ws = XLSX.utils.json_to_sheet(stockData);
+  XLSX.utils.book_append_sheet(wb, ws, 'Inventory Data');
+  
+  // Generate and download file
+  const date = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `Inventory_Export_${date}.xlsx`);
+  showNotification('Export completed successfully');
 }
 
-document.addEventListener('DOMContentLoaded', loadDashboard);
-
-document.addEventListener('DOMContentLoaded', () => {
-  if (localStorage.getItem('isAuthenticated') !== 'true') {
-    window.location.href = 'index.html'; // or 'login.html'
-  }
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+  loadDashboard();
+  
+  // Listen for data changes
+  window.addEventListener('stockDataChanged', loadDashboard);
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'stockData' || e.key === 'stockDataUpdated') {
+      loadDashboard();
+    }
+  });
 });
