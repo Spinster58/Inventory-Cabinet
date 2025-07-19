@@ -141,23 +141,32 @@ body.dark-mode {
   padding: 0;
   cursor: pointer;
   width: 60px;
-  height: 30px;
+  height: 27px;
   position: relative;
   display: flex;
   align-items: center;
+  border-radius: 15px;
 }
 
 .toggle-switch {
   width: 100%;
   height: 100%;
   background-color: var(--border-light);
-  border-radius: 15px;
+  border-radius:30px;
   position: relative;
   transition: background-color 0.3s ease;
 }
 
+.toggle-switch:hover {
+  background-color: var(--card-dark);
+}
+
 body.dark-mode .toggle-switch {
   background-color: var(--border-dark);
+}
+
+body.dark-mode .toggle-switch:hover {
+  background-color: var(--card-light);
 }
 
 .toggle-knob {
@@ -178,6 +187,9 @@ body.dark-mode .toggle-switch {
 body.dark-mode .toggle-knob {
   transform: translateX(30px);
   background-color: var(--card-dark);
+  width: 26px;
+  height: 27px;
+  border-radius: 50%;
 }
 
 .toggle-knob i {
@@ -436,6 +448,20 @@ body.dark-mode .stock-levels-container {
 
 .stock-levels-container::-webkit-scrollbar-thumb:hover {
   background: var(--primary-light);
+}
+
+#stock-level-table th, 
+#stock-level-table td {
+  text-align: center;
+  padding: 12px 15px;
+}
+
+#stock-level-table thead th {
+  text-align: center;
+}
+
+#stock-level-table tbody tr td {
+  vertical-align: middle;
 }
 
 /* New Stock-In Table Container Styles */
