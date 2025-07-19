@@ -9,13 +9,25 @@
 </head>
 <body>
   <div class="header">
-    <div class="header-title">
-      <button class="back-btn" onclick="location.href='dashboard.html'">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      <h2>Stock Out</h2>
+    <div class="header-left">
+      <div class="header-title">
+        <button class="back-btn" onclick="location.href='dashboard.html'">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <h2>Stock Out</h2>
+      </div>
+      <span id="userInfo" class="user-info"></span>
     </div>
-    <button class="theme-toggle" onclick="toggleTheme()">
+    <div class="header-controls">
+      <div class="button-group">
+        <button id="adminBtn" class="admin-btn" onclick="location.href='admin.html'" style="display: none;">
+          <i class="fas fa-user-cog"></i> Admin
+        </button>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()">
         <div class="toggle-switch">
           <div class="toggle-knob">
             <i class="fas fa-moon"></i>
@@ -23,11 +35,10 @@
           </div>
         </div>
       </button>
-    <button class="logout-btn" onclick="logout()">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </button>
+    </div>
   </div>
 
+  <!-- Rest of your stock_out.html content remains the same -->
   <div class="form-container">
     <div class="input-group">
       <label for="item">Item Name</label>
@@ -65,25 +76,25 @@
 
   <div class="section-title">Stock Out Records</div>
   <div class="stock-in-container">
-  <table id="stock-table">
-    <thead>
-      <tr>
-        <th>Item</th>
-        <th>Qty</th>
-        <th>Person</th>
-        <th>Reason</th>
-        <th class="date-column">Date</th>
-        <th class="time-column">Time</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td colspan="7" class="empty-state">No stock out records found</td>
-      </tr>
-    </tbody>
-  </table>
-  <div>
+    <table id="stock-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Person</th>
+          <th>Reason</th>
+          <th class="date-column">Date</th>
+          <th class="time-column">Time</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="7" class="empty-state">No stock out records found</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <button class="fab" onclick="addStockOut()">
     <i class="fas fa-plus"></i>
@@ -125,10 +136,20 @@
   <script src="auth.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      if (!localStorage.getItem('currentUser')) {
+      const currentUser = localStorage.getItem('currentUser');
+      if (!currentUser) {
         window.location.href = 'login.html';
+        return;
+      }
+
+      const user = JSON.parse(currentUser);
+      document.getElementById('userInfo').textContent = `${user.username} (${user.role})`;
+      
+      if (user.role === 'admin') {
+        document.getElementById('adminBtn').style.display = 'block';
       }
     });
+
     function logout() {
       localStorage.removeItem('currentUser');
       window.location.href = 'login.html';
