@@ -72,6 +72,7 @@ function addStock() {
     }
 
     const item = document.getElementById("item").value.trim();
+    const normalizedItem = item.toLowerCase();
     const qty = parseFloat(document.getElementById("qty").value.trim());
     const price = parseFloat(document.getElementById("price").value.trim());
     const supplier = document.getElementById("supplier").value.trim();
@@ -93,7 +94,8 @@ function addStock() {
     
     const newEntry = {
       type: "in",
-      item,
+      item: normalizedItem,  // Store lowercase version for consistency
+      displayItem: item,        // Store original for display
       qty,
       price,
       totalPrice: qty * price,
@@ -167,7 +169,7 @@ function loadData() {
   filteredData.forEach((entry, i) => {
     const actualIndex = data.findIndex(e => 
       e.type === "in" && 
-      e.item === entry.item && 
+      e.item.toLowerCase() === entry.item.toLowerCase() && 
       e.qty === entry.qty && 
       e.date === entry.date && 
       e.time === entry.time
@@ -175,7 +177,7 @@ function loadData() {
     
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${entry.item}</td>
+      <td>${entry.displayItem || entry.item}</td>  <!-- Use displayItem if available -->
       <td>${entry.qty}</td>
       <td>${entry.price.toFixed(2)}</td>
       <td>${entry.totalPrice.toFixed(2)}</td>
@@ -210,12 +212,12 @@ function deleteStock(index) {
     
     // Log the delete activity
     logAdminActivity(
-      `deleted stock in: ${deletedItem.qty} ${deletedItem.item}`,
+      `deleted stock in: ${deletedItem.qty} ${deletedItem.displayItem || deletedItem.item}`,
       currentUser.username,
       'delete'
     );
     
-    showNotification(`Deleted stock in: ${deletedItem.qty} ${deletedItem.item}`);
+    showNotification(`Deleted stock in: ${deletedItem.qty} ${deletedItem.displayItem || deletedItem.item}`);
     loadData();
   }
 }
@@ -225,7 +227,8 @@ function editStock(index) {
   const entry = data[index];
   if (!entry || entry.type !== "in") return;
 
-  document.getElementById("item").value = entry.item;
+  // Use displayItem if available, otherwise use item
+  document.getElementById("item").value = entry.displayItem || entry.item;
   document.getElementById("qty").value = entry.qty;
   document.getElementById("price").value = entry.price;
   document.getElementById("total-price").value = entry.totalPrice;
@@ -280,4 +283,17 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById("qty").addEventListener("input", calculateTotal);
   document.getElementById("price").addEventListener("input", calculateTotal);
   loadData();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const container = document.getElementById('stock-in-container');
+  if (container) {
+    container.addEventListener('scroll', function() {
+      if (this.scrollTop > 0) {
+        this.classList.add('scrolled');
+      } else {
+        this.classList.remove('scrolled');
+      }
+    });
+  }
 });

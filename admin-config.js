@@ -57,3 +57,16 @@ window.adminConfig = {
   removeAdminUser,
   getAdminUsers: () => JSON.parse(localStorage.getItem('adminUsers')) || []
 };
+
+document.addEventListener('DOMContentLoaded', function() {
+  const container = document.getElementById('activityLogContainer');
+  if (container) {
+    container.addEventListener('scroll', function() {
+      if (this.scrollTop > 0) {
+        this.classList.add('scrolled');
+      } else {
+        this.classList.remove('scrolled');
+      }
+    });
+  }
+});

@@ -13,6 +13,7 @@
     <h2>Dashboard</h2>
     <div class="header-controls">
       <span id="userInfo" class="user-info"></span>
+      <div class="header-buttons"></div>
       <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
       <button id="adminBtn" class="admin-btn" onclick="location.href='admin.html'" style="display: none;">
         <i class="fas fa-user-cog"></i> Admin
@@ -48,15 +49,17 @@
     <div class="chart-container">
       <canvas id="stockChart"></canvas>
     </div>
-    <table id="stock-level-table">
-      <thead>
-        <tr>
-          <th>Item</th>
-          <th>Quantity</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div class="stock-levels-container" id="stockLevelsContainer">
+      <table id="stock-level-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Quantity</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
     <button class="export-btn" onclick="exportToExcel()">
       <i class="fas fa-file-export"></i> Export to Excel
     </button>

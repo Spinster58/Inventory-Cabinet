@@ -293,3 +293,16 @@ document.addEventListener('DOMContentLoaded', function() {
     loadData();
   });
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+  const container = document.getElementById('stock-in-container');
+  if (container) {
+    container.addEventListener('scroll', function() {
+      if (this.scrollTop > 0) {
+        this.classList.add('scrolled');
+      } else {
+        this.classList.remove('scrolled');
+      }
+    });
+  }
+});

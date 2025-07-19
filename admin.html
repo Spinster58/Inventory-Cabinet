@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Add jsPDF library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <style>
     :root {
       --system-blue: #007AFF;
@@ -76,15 +79,22 @@
     }
     
     .dashboard-btn {
-      background-color: var(--system-blue);
-      color: white;
+      background-color: transparent;
+      color: var(--system-orange);
+    }
+
+    .dashboard-btn:hover {
+      background-color: rgba(0, 0, 0, 0.1);
     }
     
     .logout-btn {
-      background-color: #888;
-      color: white;
+      background-color: transparent;
+      color: var(--system-blue);
     }
     
+    .logout-btn:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
     .card {
       background-color: var(--system-background);
       border-radius: 14px;
@@ -117,31 +127,108 @@
       align-items: center;
       gap: 6px;
       padding: 6px 14px;
-      background-color: #ff3b30;
-      color: white;
+      background-color: transparent;
+      color: rgb(0, 0, 0);
       border: none;
       border-radius: 8px;
       font-size: 0.9rem;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.25s ease;
-      box-shadow: 0 2px 6px rgba(255, 59, 48, 0.3);
+    }
+
+    .po-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background-color: transparent;
+      color: rgb(0, 0, 0);
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    
+    .po-btn:hover {
+      background-color: rgba(52, 199, 89, 0.8);
     }
 
     .clear-btn:hover {
-      background-color: #ff1f0f;
-      box-shadow: 0 4px 12px rgba(255, 59, 48, 0.4);
+      background-color: var(--system-red);
     }
 
     .clear-btn:active {
       transform: scale(0.96);
     }
 
+    /* New alert type styles */
+    .role-warning {
+      background-color: rgba(255, 149, 0, 0.1);
+      color: var(--system-orange);
+    }
+
+    .role-critical {
+      background-color: rgba(255, 59, 48, 0.1);
+      color: var(--system-red);
+    }
+
+    /* Activity Log Container - Enhanced Styles */
+    .activity-log-container {
+      max-height: 220px;
+      overflow-y: auto;
+      margin: 0 15px 15px 15px;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      position: relative;
+    }
+
+    /* Custom scrollbar styling */
+    .activity-log-container::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .activity-log-container::-webkit-scrollbar-track {
+      background: var(--card-light);
+      border-radius: 4px; 
+    }
+
+    .activity-log-container::-webkit-scrollbar-thumb {
+      background: var(--primary-color);
+      border-radius: 4px;
+    }
+
+    .activity-log-container::-webkit-scrollbar-thumb:hover {
+     background: var(--primary-light);
+    }
+
+    /* Remove table styling when inside container */
+    .activity-log-container table {
+      border: none;
+      box-shadow: none;
+      margin-bottom: 0;
+      width: 100%;
+    }
+
+    /* Fix for sticky header */
+    .activity-log-container thead th {
+      position: sticky;
+      top: 0;
+      background-color: var(--card-light);
+      z-index: 10;
+    }
+
+    /* Optional scroll shadow */
+    .activity-log-container.scrolled {
+      box-shadow: inset 0 -5px 10px -5px rgba(0,0,0,0.1);
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      border-bottom-left-radius: 14px;
-      border-bottom-right-radius: 14px;
       border-spacing: 0; 
       overflow: hidden;
       margin-bottom: 0;
@@ -241,6 +328,15 @@
       text-align: center;
       color: var(--system-gray);
     }
+
+    /* Style for quantity input */
+    .purchase-qty {
+      width: 60px;
+      padding: 4px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      text-align: center;
+    }
     
     @media (max-width: 600px) {
       .container {
@@ -259,9 +355,12 @@
         flex-direction: column;
         gap: 4px;
       }
+
+      .purchase-qty {
+        width: 50px;
+      }
     }
   </style>
-
 </head>
 <body>
   <div class="container">
@@ -303,16 +402,17 @@
       </div>
     </div>
 
-    <!-- New Activity Log Section -->
-    <div class="card">
-      <div class="card-header">
-        <i class="fas fa-history"></i>
-        Activity Log
-        <button onclick="clearAllActivities()" class="clear-btn" style="margin-left: auto;">
-          <i class="fas fa-trash-alt"></i>
-          <span>Clear All</span>
-        </button>
-      </div>
+  <!-- Activity Log Section -->
+  <div class="card">
+    <div class="card-header">
+      <i class="fas fa-history"></i>
+      Activity Log
+      <button onclick="clearAllActivities()" class="clear-btn" style="margin-left: auto;">
+        <i class="fas fa-trash-alt"></i>
+        <span>Clear All</span>
+      </button>
+    </div>
+    <div class="activity-log-container" id="activityLogContainer">
       <table id="activityTable">
         <thead>
           <tr>
@@ -326,15 +426,50 @@
           <!-- Activities will be loaded here -->
         </tbody>
       </table>
-      <div id="activityEmptyState" class="empty-state" style="display: none;">
-        <i class="fas fa-clock" style="font-size: 2rem; margin-bottom: 10px;"></i>
-        <p>No activities found</p>
-        </div>
+    </div>
+    <div id="activityEmptyState" class="empty-state" style="display: none;">
+      <i class="fas fa-clock" style="font-size: 2rem; margin-bottom: 10px;"></i>
+      <p>No activities found</p>
+    </div>
+  </div>
+
+    <!-- Low Stock Alerts Section -->
+    <div class="card">
+      <div class="card-header">
+        <i class="fas fa-exclamation-triangle"></i>
+        Low Stock Alerts
+        <button onclick="generatePurchaseOrders()" class="po-btn" style="margin-left: auto;">
+          <i class="fas fa-file-invoice-dollar"></i>
+          <span>Generate POs</span>
+        </button>
+      </div>
+      <table id="alertsTable">
+        <thead>
+          <tr>
+            <th style="width: 30px;"><input type="checkbox" id="selectAllAlerts" onchange="toggleSelectAllAlerts(this)"></th>
+            <th>Item</th>
+            <th>Current Stock</th>
+            <th>Status</th>
+            <th>Last Activity</th>
+            <th>Qty To Purchase</th>
+          </tr>
+        </thead>
+        <tbody id="alertsList">
+          <!-- Alerts will be loaded here -->
+        </tbody>
+      </table>
+      <div id="alertsEmptyState" class="empty-state" style="display: none;">
+        <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+        <p>No low stock items</p>
       </div>
     </div>
+  </div>
 
   <script src="auth.js"></script>
   <script>
+    // Initialize jsPDF
+    const { jsPDF } = window.jspdf;
+    
     // Load users and activities on page load
     document.addEventListener('DOMContentLoaded', function() {
       // Check admin status
@@ -344,9 +479,10 @@
         return;
       }
 
-      // Load and display users and activities
+      // Load and display users, activities and alerts
       refreshUserList();
       refreshActivityList();
+      refreshAlertsList();
     });
 
     function clearAllActivities() {
@@ -421,6 +557,69 @@
       });
     }
 
+    // Refresh alerts list
+    function refreshAlertsList() {
+      const data = JSON.parse(localStorage.getItem('stockData') || '[]');
+      const alertsList = document.getElementById('alertsList');
+      const emptyState = document.getElementById('alertsEmptyState');
+      
+      alertsList.innerHTML = '';
+      
+      // Get all unique items
+      const allItems = [...new Set(data.map(entry => entry.item))];
+      
+      // Calculate current stock for each item and filter low stock items
+      const lowStockItems = allItems.map(item => {
+        const stock = calculateCurrentStock(item);
+        return { item, stock };
+      }).filter(({ stock }) => stock < 10) // Threshold for low stock
+        .sort((a, b) => a.stock - b.stock);
+      
+      if (lowStockItems.length === 0) {
+        emptyState.style.display = 'block';
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      
+      // Get last activity for each item
+      lowStockItems.forEach(({ item, stock }) => {
+        const activities = data.filter(entry => entry.item === item);
+        const lastActivity = activities.length > 0 
+          ? activities[activities.length - 1] 
+          : null;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><input type="checkbox" class="alert-checkbox" data-item="${item}"></td>
+          <td>${item}</td>
+          <td>${stock}</td>
+          <td>
+            <span class="user-role ${stock < 5 ? 'role-critical' : 'role-warning'}">
+              ${stock < 5 ? 'Critical' : 'Low'}
+            </span>
+          </td>
+          <td>
+            ${lastActivity 
+              ? `${lastActivity.type === 'in' ? 'Received' : 'Taken'} ${lastActivity.qty} on ${lastActivity.date}` 
+              : 'No activity'}
+          </td>
+          <td><input type="number" class="purchase-qty" data-item="${item}" min="1" value="${Math.max(20 - stock, 5)}" style="width: 60px;"></td>
+        `;
+        alertsList.appendChild(row);
+      });
+    }
+
+    function calculateCurrentStock(itemName) {
+      const data = JSON.parse(localStorage.getItem('stockData') || '[]');
+      return data.reduce((total, entry) => {
+        if (entry.item === itemName) {
+          return total + (entry.type === 'in' ? entry.qty : -entry.qty);
+        }
+        return total;
+      }, 0);
+    }
+
     // Helper function to get CSS class for activity type
     function getActivityTypeClass(type) {
       switch(type) {
@@ -463,6 +662,174 @@
       window.auth.logout();
       window.location.href = 'login.html';
     }
+
+    // Generate purchase orders for low stock items
+    function generatePurchaseOrders() {
+      const selectedCheckboxes = document.querySelectorAll('.alert-checkbox:checked');
+
+      if (selectedCheckboxes.length > 0) {
+        generateSelectedPOs();
+      } else {
+        const data = JSON.parse(localStorage.getItem('stockData') || '[]');
+        const allItems = [...new Set(data.map(entry => entry.item))];
+
+        // Get low stock items (stock < 10)
+        const lowStockItems = allItems.map(item => {
+          const stock = calculateCurrentStock(item);
+          return { item, stock };
+        }).filter(({ stock }) => stock < 10);
+        
+        if (lowStockItems.length === 0) {
+          alert("No low-stock items to generate POs for");
+          return;
+        }
+        
+        // Calculate suggested order quantities (using values from input fields)
+        const suggestedPOs = lowStockItems.map(({ item, stock }) => {
+          const qtyInput = document.querySelector(`.purchase-qty[data-item="${item}"]`);
+          const orderQty = qtyInput ? parseInt(qtyInput.value) : Math.max(20 - stock, 5);
+          
+          return {
+            item,
+            currentStock: stock,
+            orderQty: orderQty > 0 ? orderQty : 1 // Ensure at least 1 is ordered
+          };
+        });
+        
+        // Generate PDF PO
+        generatePdfPO(suggestedPOs);
+        
+        // Log this activity
+        const activities = JSON.parse(localStorage.getItem('adminActivities') || '[]');
+        activities.push({
+          action: `Generated PO for ${suggestedPOs.length} low-stock items`,
+          username: window.auth.getCurrentUser().username,
+          type: 'Generate PO',
+          timestamp: new Date().toISOString()
+        });
+        localStorage.setItem('adminActivities', JSON.stringify(activities));
+        
+        refreshActivityList();
+      }
+    }
+
+    // Generate POs for selected items only
+    function generateSelectedPOs() {
+      const selectedItems = Array.from(document.querySelectorAll('.alert-checkbox:checked'))
+        .map(checkbox => checkbox.dataset.item);
+        
+      if (selectedItems.length === 0) {
+        alert("Please select at least one item to generate PO");
+        return;
+      }
+      
+      // Get selected items with their current stock and purchase quantities
+      const suggestedPOs = selectedItems.map(item => {
+        const stock = calculateCurrentStock(item);
+        const qtyInput = document.querySelector(`.purchase-qty[data-item="${item}"]`);
+        const orderQty = qtyInput ? parseInt(qtyInput.value) : Math.max(20 - stock, 5);
+        
+        return {
+          item,
+          currentStock: stock,
+          orderQty: orderQty > 0 ? orderQty : 1 // Ensure at least 1 is ordered
+        };
+      });
+      
+      // Generate PDF PO
+      generatePdfPO(suggestedPOs);
+      
+      // Log this activity
+      const activities = JSON.parse(localStorage.getItem('adminActivities') || '[]');
+      activities.push({
+        action: `Generated PO for ${suggestedPOs.length} selected items`,
+        username: window.auth.getCurrentUser().username,
+        type: 'Generate PO',
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem('adminActivities', JSON.stringify(activities));
+      
+      refreshActivityList();
+      
+      // Uncheck all checkboxes after generation
+      document.querySelectorAll('.alert-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      document.getElementById('selectAllAlerts').checked = false;
+    }
+
+    // Generate PDF Purchase Order
+    function generatePdfPO(items) {
+      const doc = new jsPDF();
+      const date = new Date().toLocaleDateString();
+      const poNumber = 'PO-' + Date.now();
+      const currentUser = window.auth.getCurrentUser().username;
+      
+      // Add header
+      doc.setFontSize(18);
+      doc.setTextColor(0, 122, 255); // System blue
+      doc.text('PURCHASE ORDER', 105, 20, { align: 'center' });
+      
+      // Add PO details
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`PO Number: ${poNumber}`, 14, 30);
+      doc.text(`Date: ${date}`, 14, 36);
+      doc.text(`Generated by: ${currentUser}`, 14, 42);
+      
+      // Add line separator
+      doc.setDrawColor(200, 200, 200);
+      doc.line(14, 48, 196, 48);
+      
+      // Add table header
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Item', 14, 58);
+      doc.text('Current Stock', 80, 58);
+      doc.text('Order Quantity', 140, 58);
+      
+      // Add items to table
+      let y = 66;
+      items.forEach((item, index) => {
+        doc.setFontSize(10);
+        doc.text(item.item, 14, y);
+        doc.text(item.currentStock.toString(), 80, y);
+        doc.text(item.orderQty.toString(), 140, y);
+        y += 8;
+        
+        // Add page break if needed
+        if (y > 260 && index < items.length - 1) {
+          doc.addPage();
+          y = 20;
+        }
+      });
+      
+      // Add total
+      const totalQty = items.reduce((sum, item) => sum + item.orderQty, 0);
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Total Items: ${items.length}`, 14, y + 10);
+      doc.text(`Total Quantity: ${totalQty}`, 14, y + 20);
+      
+      // Add footer
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Generated by Inventory Management System', 105, 285, { align: 'center' });
+      
+      // Save the PDF
+      doc.save(`Purchase_Order_${poNumber}.pdf`);
+    }
+
+    // Toggle select all checkboxes
+    function toggleSelectAllAlerts(checkbox) {
+      const checkboxes = document.querySelectorAll('.alert-checkbox');
+      checkboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+      });
+    }
+
+    // Add event listener for stock data changes
+    window.addEventListener('stockDataChanged', refreshAlertsList);
   </script>
 </body>
 </html>

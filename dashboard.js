@@ -5,23 +5,29 @@ function loadDashboard() {
   const data = JSON.parse(localStorage.getItem('stockData')) || [];
   let totalIn = 0, totalOut = 0;
   const stockLevels = {};
+  const itemDisplayNames = {}; // Store original display names
   const recentIn = [];
   const recentOut = [];
 
   // Calculate totals and stock levels
   data.forEach(entry => {
     const qty = parseFloat(entry.qty) || 0;
-    const item = entry.item;
+    const itemKey = entry.item.toLowerCase(); // Use lowercase for comparison
+    const displayName = entry.displayItem || entry.item; // Use displayItem if available
+
+    if (!itemDisplayNames[itemKey]) {
+      itemDisplayNames[itemKey] = displayName; // Store the original display name
+    }
 
     if (entry.type === "in") {
       totalIn += qty;
       recentIn.push(entry);
-      stockLevels[item] = (stockLevels[item] || 0) + qty;
+      stockLevels[itemKey] = (stockLevels[itemKey] || 0) + qty;
     } 
     else if (entry.type === "out") {
       totalOut += qty;
       recentOut.push(entry);
-      stockLevels[item] = (stockLevels[item] || 0) - qty;
+      stockLevels[itemKey] = (stockLevels[itemKey] || 0) - qty;
     }
   });
 
@@ -29,25 +35,38 @@ function loadDashboard() {
   document.getElementById("total-in").textContent = totalIn.toFixed(2);
   document.getElementById("total-out").textContent = totalOut.toFixed(2);
 
-  // Find most frequent item
+  // Find most frequent item (case-insensitive)
   const itemCounts = {};
   data.forEach(entry => {
-    itemCounts[entry.item] = (itemCounts[entry.item] || 0) + 1;
+    const itemKey = entry.item.toLowerCase();
+    itemCounts[itemKey] = (itemCounts[itemKey] || 0) + 1;
   });
-  const mostFrequent = Object.entries(itemCounts).sort((a, b) => b[1] - a[1])[0];
-  document.getElementById("most-item").textContent = mostFrequent ? mostFrequent[0] : "-";
+  
+  let mostFrequentItem = "-";
+  let maxCount = 0;
+  
+  for (const [itemKey, count] of Object.entries(itemCounts)) {
+    if (count > maxCount) {
+      maxCount = count;
+      // Find the first entry with this item to get the display name
+      const entry = data.find(e => e.item.toLowerCase() === itemKey);
+      mostFrequentItem = entry?.displayItem || entry?.item || itemKey;
+    }
+  }
+  
+  document.getElementById("most-item").textContent = mostFrequentItem;
 
   // Update stock levels table
-  updateStockTable(stockLevels);
+  updateStockTable(stockLevels, itemDisplayNames);
 
   // Update recent transactions
   updateRecentTransactions(recentIn, recentOut);
 
   // Draw chart
-  drawChart(stockLevels);
+  drawChart(stockLevels, itemDisplayNames);
 }
 
-function updateStockTable(stockLevels) {
+function updateStockTable(stockLevels, itemDisplayNames) {
   const tbody = document.querySelector("#stock-level-table tbody");
   tbody.innerHTML = "";
   
@@ -58,9 +77,12 @@ function updateStockTable(stockLevels) {
       </tr>
     `;
   } else {
-    Object.entries(stockLevels).forEach(([item, qty]) => {
+    Object.entries(stockLevels).forEach(([itemKey, qty]) => {
       const row = document.createElement("tr");
-      row.innerHTML = `<td>${item}</td><td>${qty}</td>`;
+      row.innerHTML = `
+        <td>${itemDisplayNames[itemKey] || itemKey}</td>
+        <td>${qty}</td>
+      `;
       tbody.appendChild(row);
     });
   }
@@ -89,7 +111,7 @@ function updateRecentTable(tableId, entries) {
     const row = document.createElement("tr");
     if (entry.type === "in") {
       row.innerHTML = `
-        <td>${entry.item}</td>
+        <td>${entry.displayItem || entry.item}</td>
         <td>${entry.qty}</td>
         <td>${entry.price ? entry.price.toFixed(2) : '-'}</td>
         <td>${entry.totalPrice ? entry.totalPrice.toFixed(2) : '-'}</td>
@@ -98,7 +120,7 @@ function updateRecentTable(tableId, entries) {
       `;
     } else {
       row.innerHTML = `
-        <td>${entry.item}</td>
+        <td>${entry.displayItem || entry.item}</td>
         <td>${entry.qty}</td>
         <td>${entry.person}</td>
         <td>${entry.reason || '-'}</td>
@@ -110,14 +132,14 @@ function updateRecentTable(tableId, entries) {
   });
 }
 
-function drawChart(stockLevels) {
+function drawChart(stockLevels, itemDisplayNames) {
   const ctx = document.getElementById('stockChart').getContext('2d');
   
   if (chart) {
     chart.destroy();
   }
 
-  const labels = Object.keys(stockLevels);
+  const labels = Object.keys(stockLevels).map(key => itemDisplayNames[key] || key);
   const values = Object.values(stockLevels);
 
   if (labels.length === 0) {
@@ -126,26 +148,42 @@ function drawChart(stockLevels) {
   }
 
   document.getElementById('stockChart').style.display = 'block';
-  
+
+  // Dynamic color generator
+  const generateColors = (count) => {
+    const colors = [];
+    const hueStep = 360 / count;
+    for (let i = 0; i < count; i++) {
+      const hue = Math.floor(i * hueStep);
+      colors.push(`hsl(${hue}, 70%, 60%)`);
+    }
+    return colors;
+  };
+
   chart = new Chart(ctx, {
-    type: 'bar',
+    type: 'pie',
     data: {
       labels,
       datasets: [{
-        label: 'Current Stock',
         data: values,
-        backgroundColor: '#007aff',
-        borderRadius: 10
+        backgroundColor: generateColors(labels.length), // Use dynamic colors
+        borderWidth: 1
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            precision: 0
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const value = context.raw || 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = Math.round((value / total) * 100);
+              return `${label}: ${value} (${percentage}%)`;
+            }
           }
         }
       }
@@ -166,7 +204,7 @@ function exportToExcel() {
   // Prepare stock data
   const stockData = data.map(entry => ({
     Type: entry.type === 'in' ? 'Stock In' : 'Stock Out',
-    Item: entry.item,
+    Item: entry.displayItem || entry.item, // Use displayItem if available
     Quantity: entry.qty,
     'Unit Price': entry.price || '',
     'Total Price': entry.totalPrice || '',
@@ -199,4 +237,17 @@ document.addEventListener('DOMContentLoaded', function() {
       loadDashboard();
     }
   });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const container = document.getElementById('stockLevelsContainer');
+  if (container) {
+    container.addEventListener('scroll', function() {
+      if (this.scrollTop > 0) {
+        this.classList.add('scrolled');
+      } else {
+        this.classList.remove('scrolled');
+      }
+    });
+  }
 });
