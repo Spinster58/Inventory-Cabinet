@@ -1,24 +1,30 @@
 // notifications.js - Unified Notification System
 let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
 
-function showNotification(message, isWarning = false) {
+function showNotification(message, isWarning = false, showInCenter = true) {
   const now = new Date();
-  const notification = {
-    message,
-    isWarning,
-    date: now.toLocaleDateString(),
-    time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    timestamp: now.getTime()
-  };
   
-  // Keep only the 100 most recent notifications
-  notifications.unshift(notification);
-  if (notifications.length > 100) {
-    notifications = notifications.slice(0, 100);
+  // Only add to notification center if showInCenter is true AND it's not a validation message
+  if (showInCenter && !message.includes('Please fill all required fields')) {
+    const notification = {
+      message,
+      isWarning,
+      date: now.toLocaleDateString(),
+      time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: now.getTime()
+    };
+    
+    // Keep only the 100 most recent notifications
+    notifications.unshift(notification);
+    if (notifications.length > 100) {
+      notifications = notifications.slice(0, 100);
+    }
+    
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+    updateNotificationBadge();
   }
   
-  localStorage.setItem('notifications', JSON.stringify(notifications));
-  updateNotificationBadge();
+  // Always show the toast
   showToastNotification(message, isWarning);
 }
 

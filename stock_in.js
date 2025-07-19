@@ -80,7 +80,7 @@ function addStock() {
     const note = document.getElementById("note").value.trim();
 
     if (!item || !qty || !price || !supplier || !receiver) {
-      showNotification('Please fill all required fields', true);
+      showNotification('Please fill all required fields', true, false);
       return false;
     }
 

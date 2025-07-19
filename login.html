@@ -78,11 +78,35 @@
       text-align: center;
       margin-top: 1rem;
     }
+
+    .btn.loading {
+      position: relative;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    .btn.loading::after {
+      content: '';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: translateY(-50%) rotate(360deg); }
+    }
   </style>
 </head>
 <body>
   <div class="login-container">
-    <form class="login-form" onsubmit="event.preventDefault(); handleLogin();">
+    <form class="login-form" id="loginForm">
       <h2>🔐 Sign In</h2>
       <div class="form-group">
         <label for="username">Username</label>
@@ -92,7 +116,7 @@
         <label for="password">Password</label>
         <input type="password" id="password" placeholder="Enter password" autocomplete="current-password" required>
       </div>
-      <button type="submit" class="btn">Login</button>
+      <button type="submit" class="btn" id="loginBtn">Login</button>
       <p id="error" class="error-message"></p>
       <div class="login-link">
         Don't have an account? <a href="register.html">Register here</a>
@@ -102,38 +126,106 @@
 
   <script src="auth.js"></script>
   <script>
-    // Handle login form submission
-    function handleLogin() {
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
-      const errorElement = document.getElementById('error');
-    
-      // Clear previous errors
-      errorElement.textContent = '';
-      if (!username || !password) {
-        errorElement.textContent = 'Please enter both username and password';
-        return;
+    // Wait for DOM and auth.js to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if auth.js is loaded properly
+      function checkAuthReady() {
+        return window.auth && 
+               typeof window.auth.initUsers === 'function' &&
+               typeof window.auth.login === 'function' &&
+               typeof window.auth.getCurrentUser === 'function';
       }
-    
-      try {
-        if (window.auth.login(username, password)) {
-          const user = window.auth.getCurrentUser();
-          window.location.href = user.role === 'admin' 
-            ? 'admin.html' 
-            : 'dashboard.html';
-        } else {
-          errorElement.textContent = 'Invalid username or password';
-          document.getElementById('password').value = '';
-        }
-      } catch (error) {
-        console.error('Login error:', error);
-        errorElement.textContent = 'Login failed. Please try again.';
-      }
-    }
 
-    // Initialize the system when page loads
-    document.addEventListener('DOMContentLoaded', () => {
-      window.auth.initUsers();
+      // Initialize the auth system
+      function initializeAuth() {
+        if (!checkAuthReady()) {
+          setTimeout(initializeAuth, 100);
+          return;
+        }
+
+        try {
+          window.auth.initUsers();
+          setupEventListeners();
+        } catch (error) {
+          console.error('Auth initialization error:', error);
+          document.getElementById('error').textContent = 'System error. Please refresh the page.';
+        }
+      }
+
+      // Set up form event listeners
+      function setupEventListeners() {
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        
+        loginForm.addEventListener('submit', function(event) {
+          event.preventDefault();
+          handleLogin();
+        });
+
+        // Keyboard navigation
+        document.getElementById('username').addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('password').focus();
+          }
+        });
+
+        document.getElementById('password').addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            loginBtn.click();
+          }
+        });
+      }
+
+      // Handle login process
+      function handleLogin() {
+        if (!checkAuthReady()) {
+          document.getElementById('error').textContent = 'System not ready. Please try again.';
+          return;
+        }
+
+        const btn = document.getElementById('loginBtn');
+        const errorElement = document.getElementById('error');
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        // Show loading state
+        btn.classList.add('loading');
+        btn.disabled = true;
+        errorElement.textContent = '';
+
+        // Validate inputs
+        if (!username || !password) {
+          errorElement.textContent = 'Please enter both username and password';
+          btn.classList.remove('loading');
+          btn.disabled = false;
+          return;
+        }
+
+        try {
+          // Attempt login
+          if (window.auth.login(username, password)) {
+            const user = window.auth.getCurrentUser();
+            // Redirect based on role
+            window.location.href = user.role === 'admin' 
+              ? 'admin.html' 
+              : 'dashboard.html';
+          } else {
+            errorElement.textContent = 'Invalid username or password';
+            document.getElementById('password').value = '';
+          }
+        } catch (error) {
+          console.error('Login error:', error);
+          errorElement.textContent = 'Login failed. Please try again.';
+        } finally {
+          btn.classList.remove('loading');
+          btn.disabled = false;
+        }
+      }
+
+      // Start initialization
+      initializeAuth();
     });
   </script>
 </body>

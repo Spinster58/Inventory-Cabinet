@@ -123,7 +123,7 @@ function addStockOut() {
   const reason = document.getElementById('reason').value.trim();
 
   if (!item || !qty || !person) {
-    showNotification('Please fill all required fields', true);
+    showNotification('Please fill all required fields', true, false);
     return;
   }
 

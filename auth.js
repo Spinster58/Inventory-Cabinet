@@ -112,9 +112,25 @@ window.auth = {
   },
 
   /**
+   * ADMIN-ONLY: Change user role
+   */
+  changeUserRole: function(username, newRole) {
+    if (!this.isAdmin()) return false;
+    
+    const users = this.getAllUsers();
+    const userIndex = users.findIndex(u => u.username === username);
+    
+    if (userIndex === -1) return false;
+    
+    users[userIndex].role = newRole;
+    localStorage.setItem('users', JSON.stringify(users));
+    return true;
+  },
+
+  /**
    * ADMIN-ONLY: Reset a user's password
    */
-  adminResetPassword: function(username, newPassword) {
+  resetUserPassword: function(username, newPassword) {
     if (!this.isAdmin()) return false;
     
     const users = this.getAllUsers();

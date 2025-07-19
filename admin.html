@@ -128,7 +128,7 @@
       gap: 6px;
       padding: 6px 14px;
       background-color: transparent;
-      color: rgb(0, 0, 0);
+      color: var(--system-black);
       border: none;
       border-radius: 8px;
       font-size: 0.9rem;
@@ -173,6 +173,38 @@
     .role-critical {
       background-color: rgba(255, 59, 48, 0.1);
       color: var(--system-red);
+    }
+
+    .role-change-btn {
+      background-color: transparent;
+      color: var(--system-blue);
+      border: none;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: background-color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .role-change-btn:hover {
+      background-color: rgba(0, 122, 255, 0.1);
+    }
+
+    /* Update the action buttons cell for better spacing */
+    .action-buttons-cell {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 600px) {
+      .action-buttons-cell {
+        flex-direction: column;
+        gap: 4px;
+      }
     }
 
     /* Activity Log Container - Enhanced Styles */
@@ -282,6 +314,11 @@
       background-color: rgba(255, 59, 48, 0.1);
       color: var(--system-red);
     }
+
+    .role-role-change {
+      background-color: rgba(94, 92, 230, 0.1);
+      color: #5e5ce6;
+    }
     
     .action-buttons-cell {
       display: flex;
@@ -290,7 +327,7 @@
     
     .reset-btn {
       background-color: transparent;
-      color: var(--system-blue);
+      color: var(--system-gray);
       border: none;
       font-weight: 500;
       cursor: pointer;
@@ -317,11 +354,11 @@
     }
     
     .reset-btn:hover {
-      background-color: rgba(0, 122, 255, 0.1);
+      background-color: rgb(255, 232, 23);
     }
     
     .remove-btn:hover {
-      background-color: rgba(255, 59, 48, 0.1);
+      background-color: rgba(255, 58, 48, 0.568);
     }
     
     .empty-state {
@@ -558,14 +595,14 @@
       const users = window.auth.getAllUsers();
       const userList = document.getElementById('userList');
       const emptyState = document.getElementById('emptyState');
-      
+  
       userList.innerHTML = '';
-      
+  
       if (!users || users.length === 0) {
         emptyState.style.display = 'block';
         return;
       }
-      
+  
       emptyState.style.display = 'none';
 
       users.forEach(user => {
@@ -575,6 +612,13 @@
           <td><span class="user-role role-${user.role}">${user.role}</span></td>
           <td>${new Date(user.createdAt).toLocaleString()}</td>
           <td class="action-buttons-cell">
+            ${user.role === 'admin' 
+              ? `<button onclick="changeUserRole('${user.username}', 'user')" class="role-change-btn">
+                  <i class="fas fa-user-shield"></i> Make User
+                </button>`
+              : `<button onclick="changeUserRole('${user.username}', 'admin')" class="role-change-btn">
+                  <i class="fas fa-user-cog"></i> Make Admin
+                </button>`}
             <button onclick="resetPassword('${user.username}')" class="reset-btn">
               <i class="fas fa-key"></i> Reset
             </button>
@@ -585,7 +629,7 @@
         `;
         userList.appendChild(row);
       });
-    }
+    } 
 
     // Refresh activity list
     function refreshActivityList() {
@@ -676,6 +720,29 @@
       });
     }
 
+    // Change user role function
+    function changeUserRole(username, newRole) {
+      if (confirm(`Are you sure you want to change ${username}'s role to ${newRole}?`)) {
+        if (window.auth.changeUserRole(username, newRole)) {
+          alert(`User role changed successfully to ${newRole}`);
+          refreshUserList();
+      
+          // Log this activity
+          const activities = JSON.parse(localStorage.getItem('adminActivities') || '[]');
+          activities.push({
+            action: `Changed ${username}'s role to ${newRole}`,
+            username: window.auth.getCurrentUser().username,
+            type: 'Role Change',
+            timestamp: new Date().toISOString()
+          });
+          localStorage.setItem('adminActivities', JSON.stringify(activities));
+          refreshActivityList();
+        } else {
+          alert('Failed to change user role');
+        }
+      }
+    }
+
     // Adjust quantity function
     function adjustQty(item, change) {
       const input = document.querySelector(`.purchase-qty[data-item="${item}"]`);
@@ -704,6 +771,7 @@
         case 'stock-in': return 'role-stock-in';
         case 'stock-out': return 'role-stock-out';
         case 'delete': return 'role-delete';
+        case 'role change': return 'role-role-change';
         default: return 'role-user';
       }
     }
