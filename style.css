@@ -82,13 +82,14 @@ body.dark-mode .user-info {
   align-items: center;
 }
 
+/* Theme Toggle Switch */
 .theme-toggle {
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
-  width: 50px;
-  height: 26px;
+  width: 60px;
+  height: 30px;
   position: relative;
   display: flex;
   align-items: center;
@@ -98,7 +99,7 @@ body.dark-mode .user-info {
   width: 100%;
   height: 100%;
   background-color: var(--border-light);
-  border-radius: 13px;
+  border-radius: 15px;
   position: relative;
   transition: background-color 0.3s ease;
 }
@@ -109,18 +110,49 @@ body.dark-mode .toggle-switch {
 
 .toggle-knob {
   position: absolute;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   background-color: var(--card-light);
   border-radius: 50%;
   left: 2px;
   transition: transform 0.3s ease, background-color 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 body.dark-mode .toggle-knob {
-  transform: translateX(24px);
+  transform: translateX(30px);
   background-color: var(--card-dark);
+}
+
+.toggle-knob i {
+  position: absolute;
+  font-size: 12px;
+  transition: opacity 0.3s ease;
+  color: var(--text-light);
+}
+
+body.dark-mode .toggle-knob i {
+  color: var(--text-dark);
+}
+
+.toggle-knob .fa-moon {
+  opacity: 1;
+}
+
+.toggle-knob .fa-sun {
+  opacity: 0;
+}
+
+body.dark-mode .toggle-knob .fa-moon {
+  opacity: 0;
+}
+
+body.dark-mode .toggle-knob .fa-sun {
+  opacity: 1;
 }
 
 /* Filter Button */
