@@ -1,5 +1,6 @@
 // dashboard.js
 let chart;
+let filteredItems = null;
 
 function loadDashboard() {
   const data = JSON.parse(localStorage.getItem('stockData')) || [];
@@ -31,6 +32,17 @@ function loadDashboard() {
     }
   });
 
+  // Apply filters to the stock table if any
+  let displayStockLevels = {...stockLevels};
+  if (filteredItems && filteredItems.length > 0) {
+    displayStockLevels = Object.keys(stockLevels)
+      .filter(key => filteredItems.includes(key))
+      .reduce((obj, key) => {
+        obj[key] = stockLevels[key];
+        return obj;
+      }, {});
+  }
+
   // Update summary cards
   document.getElementById("total-in").textContent = totalIn.toFixed(2);
   document.getElementById("total-out").textContent = totalOut.toFixed(2);
@@ -56,13 +68,13 @@ function loadDashboard() {
   
   document.getElementById("most-item").textContent = mostFrequentItem;
 
-  // Update stock levels table
-  updateStockTable(stockLevels, itemDisplayNames);
+  // Update stock levels table with filtered items
+  updateStockTable(displayStockLevels, itemDisplayNames);
 
   // Update recent transactions
   updateRecentTransactions(recentIn, recentOut);
 
-  // Draw chart
+  // Draw chart with filtered items
   drawChart(stockLevels, itemDisplayNames);
 }
 
@@ -139,8 +151,19 @@ function drawChart(stockLevels, itemDisplayNames) {
     chart.destroy();
   }
 
-  const labels = Object.keys(stockLevels).map(key => itemDisplayNames[key] || key);
-  const values = Object.values(stockLevels);
+  // Apply filters if any
+  let filteredStockLevels = {...stockLevels};
+  if (filteredItems && filteredItems.length > 0) {
+    filteredStockLevels = Object.keys(stockLevels)
+      .filter(key => filteredItems.includes(key))
+      .reduce((obj, key) => {
+        obj[key] = stockLevels[key];
+        return obj;
+      }, {});
+  }
+
+  const labels = Object.keys(filteredStockLevels).map(key => itemDisplayNames[key] || key);
+  const values = Object.values(filteredStockLevels);
 
   if (labels.length === 0) {
     document.getElementById('stockChart').style.display = 'none';
@@ -224,6 +247,77 @@ function exportToExcel() {
   const date = new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb, `Inventory_Export_${date}.xlsx`);
   showNotification('Export completed successfully');
+}
+
+function showFilterDialog() {
+  const data = JSON.parse(localStorage.getItem('stockData')) || [];
+  const stockLevels = getCurrentStockLevels(data);
+  const container = document.getElementById('filterItemsContainer');
+  
+  container.innerHTML = `
+    <div class="filter-controls">
+      <button onclick="toggleSelectAll(true)" class="select-all-btn">Select All</button>
+      <button onclick="toggleSelectAll(false)" class="unselect-all-btn">Unselect All</button>
+    </div>
+  `;
+  
+  Object.keys(stockLevels).forEach(itemKey => {
+    const itemName = getDisplayNameForItem(data, itemKey);
+    const div = document.createElement('div');
+    div.className = 'filter-item';
+    div.innerHTML = `
+      <input type="checkbox" id="filter-${itemKey}" ${!filteredItems || filteredItems.includes(itemKey) ? 'checked' : ''}>
+      <label for="filter-${itemKey}">${itemName}</label>
+    `;
+    container.appendChild(div);
+  });
+  
+  document.getElementById('filterDialog').style.display = 'block';
+}
+
+function toggleSelectAll(select) {
+  const checkboxes = document.querySelectorAll('#filterItemsContainer .filter-item input[type="checkbox"]');
+  checkboxes.forEach(checkbox => {
+    checkbox.checked = select;
+  });
+}
+
+function closeFilterDialog() {
+  document.getElementById('filterDialog').style.display = 'none';
+}
+
+function applyFilters() {
+  const container = document.getElementById('filterItemsContainer');
+  const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+  
+  filteredItems = Array.from(checkboxes)
+    .filter(checkbox => checkbox.checked)
+    .map(checkbox => checkbox.id.replace('filter-', ''));
+  
+  closeFilterDialog();
+  loadDashboard();
+}
+
+function getCurrentStockLevels(data) {
+  const stockLevels = {};
+  
+  data.forEach(entry => {
+    const qty = parseFloat(entry.qty) || 0;
+    const itemKey = entry.item.toLowerCase();
+    
+    if (entry.type === "in") {
+      stockLevels[itemKey] = (stockLevels[itemKey] || 0) + qty;
+    } else if (entry.type === "out") {
+      stockLevels[itemKey] = (stockLevels[itemKey] || 0) - qty;
+    }
+  });
+  
+  return stockLevels;
+}
+
+function getDisplayNameForItem(data, itemKey) {
+  const entry = data.find(e => e.item.toLowerCase() === itemKey);
+  return entry?.displayItem || entry?.item || itemKey;
 }
 
 // Initialize dashboard

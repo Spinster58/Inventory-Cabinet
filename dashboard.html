@@ -46,6 +46,9 @@
     <div class="card-title">
       <i class="fas fa-boxes"></i> Current Stock Levels
     </div>
+     <button class="filter-btn" onclick="showFilterDialog()">
+      <i class="fas fa-filter"></i> Filter Items
+    </button>
     <div class="chart-container">
       <canvas id="stockChart"></canvas>
     </div>
@@ -131,6 +134,23 @@
       <button class="clear-all-btn" onclick="clearAllNotifications()">Clear All</button>
     </div>
     <div class="notification-content"></div>
+  </div>
+
+  <!-- Filter Dialog -->
+  <div id="filterDialog" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Filter Items</h3>
+        <span class="close" onclick="closeFilterDialog()">&times;</span>
+      </div>
+      <div class="modal-body" id="filterItemsContainer">
+        <!-- Items will be populated here -->
+      </div>
+      <div class="modal-footer">
+        <button onclick="applyFilters()" class="apply-btn">Apply</button>
+        <button onclick="closeFilterDialog()" class="cancel-btn">Cancel</button>
+      </div>
+    </div>
   </div>
 
   <script src="theme.js"></script>

@@ -84,7 +84,7 @@
     }
 
     .dashboard-btn:hover {
-      background-color: rgba(0, 0, 0, 0.1);
+      background-color: #f8d29c;
     }
     
     .logout-btn {
@@ -93,7 +93,7 @@
     }
     
     .logout-btn:hover {
-      background-color: rgba(0, 0, 0, 0.1);
+      background-color: rgba(0, 122, 255, 0.1);
     }
     .card {
       background-color: var(--system-background);
@@ -183,6 +183,7 @@
       border: 1px solid var(--border-light);
       border-radius: 8px;
       position: relative;
+      border-color: transparent;
     }
 
     /* Custom scrollbar styling */
@@ -240,7 +241,7 @@
       font-weight: 500;
       font-size: 0.85rem;
       color: var(--system-gray);
-      background-color: var(--system-grouped-background);
+      background-color: var(--system-background);
     }
     
     td {
@@ -329,13 +330,61 @@
       color: var(--system-gray);
     }
 
-    /* Style for quantity input */
+    /* Enhanced Quantity Input Styles */
+    .purchase-qty-container {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
     .purchase-qty {
-      width: 60px;
-      padding: 4px;
+      width: 70px;
+      padding: 8px 10px;
       border: 1px solid #ddd;
-      border-radius: 4px;
+      border-radius: 8px;
       text-align: center;
+      font-size: 0.9rem;
+      background-color: var(--system-background);
+      transition: all 0.2s ease;
+      -webkit-appearance: none;
+      -moz-appearance: textfield;
+    }
+
+    .purchase-qty:focus {
+      outline: none;
+      border-color: var(--system-blue);
+      box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+    }
+
+    .purchase-qty::-webkit-inner-spin-button,
+    .purchase-qty::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background-color: var(--system-background);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.8rem;
+      color: var(--system-gray);
+    }
+
+    .qty-btn:hover {
+      background-color: var(--system-grouped-background);
+      border-color: var(--system-blue);
+      color: var(--system-blue);
+    }
+
+    .qty-btn:active {
+      transform: scale(0.95);
     }
     
     @media (max-width: 600px) {
@@ -356,8 +405,19 @@
         gap: 4px;
       }
 
+      .purchase-qty-container {
+        flex-direction: column;
+        gap: 2px;
+      }
+      
       .purchase-qty {
         width: 50px;
+        padding: 6px;
+      }
+      
+      .qty-btn {
+        width: 24px;
+        height: 24px;
       }
     }
   </style>
@@ -604,10 +664,28 @@
               ? `${lastActivity.type === 'in' ? 'Received' : 'Taken'} ${lastActivity.qty} on ${lastActivity.date}` 
               : 'No activity'}
           </td>
-          <td><input type="number" class="purchase-qty" data-item="${item}" min="1" value="${Math.max(20 - stock, 5)}" style="width: 60px;"></td>
+          <td>
+            <div class="purchase-qty-container">
+              <button class="qty-btn" onclick="adjustQty('${item}', -1)">-</button>
+              <input type="number" class="purchase-qty" data-item="${item}" min="1" value="${Math.max(20 - stock, 5)}">
+              <button class="qty-btn" onclick="adjustQty('${item}', 1)">+</button>
+            </div>
+          </td>
         `;
         alertsList.appendChild(row);
       });
+    }
+
+    // Adjust quantity function
+    function adjustQty(item, change) {
+      const input = document.querySelector(`.purchase-qty[data-item="${item}"]`);
+      if (input) {
+        let newValue = parseInt(input.value) + change;
+        if (newValue < 1) newValue = 1;
+        input.value = newValue;
+        // Trigger change event if needed
+        input.dispatchEvent(new Event('change'));
+      }
     }
 
     function calculateCurrentStock(itemName) {

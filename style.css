@@ -98,6 +98,143 @@ body.dark-mode .user-info {
   transform: scale(1.1);
 }
 
+/* Filter Button */
+.filter-btn {
+  background-color: #007AFF;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  margin: 10px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-btn:hover {
+  background-color: #0062CC;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 10% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 500px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.modal-header .close {
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.modal-header .close:hover {
+  color: black;
+}
+
+.modal-body {
+  margin-bottom: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.apply-btn, .cancel-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.apply-btn {
+  background-color: #007AFF;
+  color: white;
+  border: none;
+}
+
+.apply-btn:hover {
+  background-color: #0062CC;
+}
+
+.cancel-btn {
+  background-color: #f44336;
+  color: white;
+  border: none;
+}
+
+.cancel-btn:hover {
+  background-color: #d32f2f;
+}
+
+.select-all-btn, .unselect-all-btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  font-size: 14px;
+}
+
+.select-all-btn {
+  background-color: #007AFF;
+  color: white;
+}
+
+.select-all-btn:hover {
+  background-color: #0062CC;
+}
+
+.unselect-all-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.unselect-all-btn:hover {
+  background-color: #d32f2f;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.filter-item input {
+  margin-right: 10px;
+}
+
+.filter-item label {
+  flex-grow: 1;
+}
+
 /* Card Styles */
 .card {
   background-color: var(--card-light);
@@ -167,6 +304,29 @@ body.dark-mode .stock-levels-container {
 
 body.dark-mode .stock-levels-container.scrolled {
   box-shadow: inset 0 -5px 10px -5px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .stock-levels-container {
+  border-color: transparent;
+}
+
+.stock-levels-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.stock-levels-container::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.stock-levels-container::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+.stock-levels-container::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-light);
 }
 
 /* New Stock-In Table Container Styles */
@@ -961,7 +1121,7 @@ body.dark-mode .stat-item {
 }
 
 .logout-btn:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 122, 255, 0.1);
 }
 
 .logout-btn i {
